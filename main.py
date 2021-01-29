@@ -29,6 +29,11 @@ async def echo(message: types.Message):
     await bot.send_message(message.chat.id, message.text)
 
 
+@dp.message_handler(['start', 'help'])
+async def print_help(message: types.Message):
+    await bot.send_message(message.chat.id, "Hello, I'm under development!")
+
+
 async def on_startup(dp):
     await bot.set_webhook(WEBHOOK_URL)
 
