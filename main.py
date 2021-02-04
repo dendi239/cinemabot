@@ -74,7 +74,8 @@ def parse_movie(film_json: tp.Dict[str, tp.Any]) -> tp.Optional[Movie]:
     offers: tp.Dict[str, CinemaLink] = {}
     if 'offers' in film_json and film_json['offers']:
         for offer_json in film_json['offers']:
-            if (cinema_link := parse_cinema_link(offer_json)) is not None:
+            cinema_link = parse_cinema_link(offer_json)
+            if cinema_link is not None:
                 offers[cinema_link.cinema] = cinema_link
 
     return Movie(
@@ -126,10 +127,9 @@ async def base_search_for_item(query: str) -> tp.AsyncIterable[BaseMovie]:
 
     results = results['items']
     for result_json in results:
-        if (result := parse_base_movie(result_json)) is None:
-            continue
-
-        yield result
+        result = parse_base_movie(result_json)
+        if result is not None:
+            yield result
 
 
 async def search_for_item(query: str) -> tp.AsyncIterable[Movie]:
