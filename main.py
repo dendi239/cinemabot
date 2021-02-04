@@ -23,7 +23,7 @@ providers = {provider['id']: provider for provider in jw.get_providers()}
 
 
 @dp.message_handler(commands=['start', 'help'])
-async def help(message: types.Message) -> None:
+async def show_help(message: types.Message) -> None:
     help_message = "Это Cinemabot. " \
                    "Бот который умеет искать фильмы и/или сериалы для просмотра.\n" \
                    "Для простого поиска просто введите запрос. " \
@@ -35,7 +35,7 @@ async def help(message: types.Message) -> None:
 
 
 @dp.message_handler(commands=['todo'])
-async def todo(message: types.Message) -> None:
+async def show_todo(message: types.Message) -> None:
     todo_message = """TODO list:
 - [ ] webhooks
 - [ ] Movie inherits from BaseMovie
