@@ -54,12 +54,13 @@ class Movie(BaseMovie):
         self.poster = film_json['poster']
 
         offers: tp.Dict[int, CinemaLink] = {}
-        for offer_json in film_json['offers']:
-            try:
-                cinema_link = CinemaLink(offer_json)
-                offers[cinema_link.provider_id] = cinema_link
-            except KeyError:
-                pass
+        if 'offers' in film_json:
+            for offer_json in film_json['offers']:
+                try:
+                    cinema_link = CinemaLink(offer_json)
+                    offers[cinema_link.provider_id] = cinema_link
+                except KeyError:
+                    pass
 
         self.offers = list(offers.values())
 
