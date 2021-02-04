@@ -187,7 +187,6 @@ async def show_todo(message: types.Message) -> None:
         md.bold('TODO list:'),
         md.text('- webhooks'),
         md.text('- Data validation for `BaseMovie.object_type`'),
-        md.text('- Unified format for callback data storage'),
         md.text('- Add rating'),
         sep='\n'
     )
@@ -253,7 +252,7 @@ async def search_for_item_list(callback_data: types.CallbackQuery) -> None:
         await bot.send_message(callback_data.from_user.id, f'Ничего не найдено по запросу "{query}"')
         return
 
-    message = f'Результаты поиска по запросу "{query}"' + '\n'.join(
+    message = f'Результаты поиска по запросу "{query}":\n' + '\n'.join(
         f'{index}. {format_base_movie(base_movie)}'
         for index, base_movie in enumerate(base_movies, start=1)
     )
