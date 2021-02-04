@@ -4,6 +4,7 @@ import logging
 import os
 import typing as tp
 
+import aiogram.utils.markdown as md
 from aiogram import Bot, types
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.dispatcher import Dispatcher
@@ -24,7 +25,7 @@ providers = {provider['id']: provider for provider in jw.get_providers()}
 
 @dp.message_handler(commands=['start', 'help'])
 async def show_help(message: types.Message) -> None:
-    help_message = "Это Cinemabot. " \
+    help_message = "Это *Cinemabot*. " \
                    "Бот который умеет искать фильмы и/или сериалы для просмотра.\n" \
                    "Для простого поиска просто введите запрос. " \
                    "Далее можете либо посмотреть первый найденный фильм, либо выбрать из результатов поиска.\n\n" \
@@ -36,13 +37,15 @@ async def show_help(message: types.Message) -> None:
 
 @dp.message_handler(commands=['todo'])
 async def show_todo(message: types.Message) -> None:
-    todo_message = """TODO list:
-- [ ] webhooks
-- [ ] Movie inherits from BaseMovie
-- [ ] Data validation for BaseMovie.object_type
-- [ ] Unified format for callback data storage
-- [ ] Add rating
-    """
+    todo_message = md.text(
+        md.bold('TODO list:'),
+        md.text('- webhooks'),
+        md.text('- `Movie` inherits from `BaseMovie`'),
+        md.text('- Data validation for `BaseMovie.object_type`'),
+        md.text('- Unified format for callback data storage'),
+        md.text('- Add rating'),
+        sep='\n'
+    )
     await bot.send_message(message.chat.id, todo_message, parse_mode=types.ParseMode.MARKDOWN)
 
 
