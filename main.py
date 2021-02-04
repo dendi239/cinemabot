@@ -9,12 +9,6 @@ from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.dispatcher import Dispatcher
 from justwatch import JustWatch
 
-"""TODO list:
-- [ ] webhooks
-- [ ] Movie inherits from BaseMovie
-- [ ] Data validation for BaseMovie.object_type
-- [ ] Unified format for callback data storage
-"""
 
 API_TOKEN = os.environ['API_TOKEN']
 
@@ -29,8 +23,44 @@ providers = {provider['id']: provider for provider in jw.get_providers()}
 
 
 @dp.message_handler(commands=['start', 'help'])
-async def help(message: types.Message):
-    await bot.send_message(message.chat.id, "This bot is under development")
+async def help(message: types.Message) -> None:
+    help_message = "Это Cinemabot. " \
+                   "Бот который умеет искать фильмы и/или сериалы для просмотра.\n" \
+                   "Для простого поиска просто введите запрос. " \
+                   "Далее можете либо посмотреть первый найденный фильм, либо выбрать из результатов поиска.\n\n" \
+                   "/start, /help покажут это сообщение снова\n" \
+                   "/todo покажет сообщение с текущим тудулистом"
+
+    await bot.send_message(message.chat.id, help_message, parse_mode=types.ParseMode.MARKDOWN)
+
+
+@dp.message_handler(commands=['todo'])
+async def todo(message: types.Message) -> None:
+    todo_message = """TODO list:
+- [ ] webhooks
+- [ ] Movie inherits from BaseMovie
+- [ ] Data validation for BaseMovie.object_type
+- [ ] Unified format for callback data storage
+- [ ] Add rating
+    """
+    await bot.send_message(message.chat.id, todo_message, parse_mode=types.ParseMode.MARKDOWN)
+
+
+@dp.message_handler()
+async def search_for_film(message: types.Message) -> None:
+    async for film in search_for_item(message.text):
+        keyboard = WrappedInlineKeyboardMarkup()
+        keyboard.add(
+            *(types.InlineKeyboardButton(offer.cinema, url=offer.url) for offer in film.offers),
+            types.InlineKeyboardButton('more', callback_data=f'list:{message.text}'),
+        )
+
+        await bot.send_photo(message.chat.id, film.get_poster_url(), format_description(film),
+                             parse_mode=types.ParseMode.HTML, reply_markup=keyboard)
+        break
+    else:
+        await message.reply(f'Ничего не найдено по запросу "{message.text}"',
+                            reply_markup=types.ReplyKeyboardRemove())
 
 
 @dataclasses.dataclass
@@ -143,7 +173,7 @@ async def search_for_item(query: str) -> tp.AsyncIterable[Movie]:
 
 
 class WrappedInlineKeyboardMarkup(types.InlineKeyboardMarkup):
-    def __init__(self, symbols_limit: int = 30, count_limit: int = 3) -> None:
+    def __init__(self, symbols_limit: int = 20, count_limit: int = 3) -> None:
         self.symbols_limit = symbols_limit
         super().__init__(row_width=count_limit)
 
@@ -161,22 +191,6 @@ class WrappedInlineKeyboardMarkup(types.InlineKeyboardMarkup):
                 row_len = len(button.text)
 
         self.inline_keyboard.append(row)
-
-
-@dp.message_handler()
-async def search_for_film(message: types.Message) -> None:
-    async for film in search_for_item(message.text):
-        keyboard = WrappedInlineKeyboardMarkup()
-        keyboard.add(
-            *(types.InlineKeyboardButton(offer.cinema, url=offer.url) for offer in film.offers),
-            types.InlineKeyboardButton('more', callback_data=f'list:{message.text}'),
-        )
-
-        await bot.send_photo(message.chat.id, film.get_poster_url(), format_description(film),
-                             parse_mode=types.ParseMode.HTML, reply_markup=keyboard)
-        break
-    else:
-        await message.reply('No results found :(', reply_markup=types.ReplyKeyboardRemove())
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('movie:') or c.data.startswith('show:'))
@@ -213,15 +227,15 @@ async def search_for_item_list(callback_data: types.CallbackQuery) -> None:
     base_movies = [base_movie async for base_movie in base_search_for_item(query)][:10]
 
     if not base_movies:
-        await bot.send_message(callback_data.from_user.id, f'No results found by query "{query}"')
+        await bot.send_message(callback_data.from_user.id, f'Ничего не найдено по запросу "{query}"')
         return
 
-    message = '\n'.join(
+    message = f'Результаты поиска по запросу "{query}"' + '\n'.join(
         f'{index}. {format_base_movie(base_movie)}'
         for index, base_movie in enumerate(base_movies, start=1)
     )
 
-    keyboard = WrappedInlineKeyboardMarkup(symbols_limit=30, count_limit=5)
+    keyboard = WrappedInlineKeyboardMarkup(symbols_limit=10, count_limit=5)
     keyboard.add(
         *(types.InlineKeyboardButton(str(index + 1), callback_data=f'{movie.object_type}:{movie.id}')
           for index, movie in enumerate(base_movies))
