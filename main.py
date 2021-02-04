@@ -26,7 +26,7 @@ providers = {provider['id']: provider for provider in jw.get_providers()}
 @dp.message_handler(commands=['start', 'help'])
 async def show_help(message: types.Message) -> None:
     help_message = "Это *Cinemabot*. " \
-                   "Бот который умеет искать фильмы и/или сериалы для просмотра.\n" \
+                   "Бот который умеет искать фильмы и/или сериалы для просмотра.\n\n" \
                    "Для простого поиска просто введите запрос. " \
                    "Далее можете либо посмотреть первый найденный фильм, либо выбрать из результатов поиска.\n\n" \
                    "/start, /help покажут это сообщение снова\n" \
@@ -40,7 +40,6 @@ async def show_todo(message: types.Message) -> None:
     todo_message = md.text(
         md.bold('TODO list:'),
         md.text('- webhooks'),
-        md.text('- `Movie` inherits from `BaseMovie`'),
         md.text('- Data validation for `BaseMovie.object_type`'),
         md.text('- Unified format for callback data storage'),
         md.text('- Add rating'),
@@ -67,58 +66,58 @@ async def search_for_film(message: types.Message) -> None:
 
 
 @dataclasses.dataclass
+class BaseMovie:
+    id: int
+    title: str
+    object_type: str
+    original_release_year: tp.Optional[int]
+
+    def __init__(self, film_json: tp.Dict[str, tp.Any]) -> None:
+        """
+        Parses json with base film data.
+
+        :param film_json: json with 'id', 'title', 'object_type' fields present
+        :raise if :
+        """
+        self.id = film_json['id']
+        self.title = film_json['title']
+        self.object_type = film_json['object_type']
+        self.original_release_year = film_json.get('original_release_year', None)
+
+
+@dataclasses.dataclass
 class CinemaLink:
     cinema: str
     url: str
 
+    def __init__(self, cinema_link_json: tp.Dict[str, tp.Any]) -> None:
+        self.cinema = providers[cinema_link_json['provider_id']]['clear_name']
+        self.url = cinema_link_json['urls']['standard_web']
+
 
 @dataclasses.dataclass
-class Movie:
-    title: str
-    original_release_year: tp.Optional[int]
+class Movie(BaseMovie):
     short_description: str
-    object_type: str
     poster: str
     offers: tp.List[CinemaLink]
 
+    def __init__(self, film_json: tp.Dict[str, tp.Any]) -> None:
+        super().__init__(film_json)
+        self.short_description = film_json['short_description']
+        self.poster = film_json['poster']
+
+        offers: tp.Dict[str, CinemaLink] = {}
+        for offer_json in film_json['offers']:
+            try:
+                cinema_link = CinemaLink(offer_json)
+                offers[cinema_link.cinema] = cinema_link
+            except IndexError:
+                pass
+
+        self.offers = list(offers.values())
+
     def get_poster_url(self) -> str:
         return 'https://images.justwatch.com' + self.poster.format(profile='s592')
-
-
-def parse_cinema_link(cinema_link_json: tp.Dict[str, tp.Any]) -> tp.Optional[CinemaLink]:
-    if 'provider_id' not in cinema_link_json or \
-            'urls' not in cinema_link_json or \
-            'standard_web' not in cinema_link_json['urls']:
-        return None
-
-    return CinemaLink(
-        providers[cinema_link_json['provider_id']]['clear_name'],
-        cinema_link_json['urls']['standard_web'],
-    )
-
-
-def parse_movie(film_json: tp.Dict[str, tp.Any]) -> tp.Optional[Movie]:
-    if 'title' not in film_json or \
-            'short_description' not in film_json or \
-            'poster' not in film_json or \
-            'object_type' not in film_json:
-        return None
-
-    offers: tp.Dict[str, CinemaLink] = {}
-    if 'offers' in film_json and film_json['offers']:
-        for offer_json in film_json['offers']:
-            cinema_link = parse_cinema_link(offer_json)
-            if cinema_link is not None:
-                offers[cinema_link.cinema] = cinema_link
-
-    return Movie(
-        title=film_json['title'],
-        short_description=film_json['short_description'],
-        object_type=film_json['object_type'],
-        original_release_year=film_json.get('original_release_year', None),
-        poster=film_json['poster'],
-        offers=list(offers.values()),
-    )
 
 
 def format_description(movie: Movie) -> str:
@@ -131,26 +130,6 @@ def format_description(movie: Movie) -> str:
            f"{movie.short_description}"
 
 
-@dataclasses.dataclass
-class BaseMovie:
-    id: int
-    title: str
-    object_type: str
-    original_release_year: tp.Optional[int]
-
-
-def parse_base_movie(film_json: tp.Dict[str, tp.Any]) -> tp.Optional[BaseMovie]:
-    if 'id' not in film_json or 'title' not in film_json or 'object_type' not in film_json:
-        return None
-
-    return BaseMovie(
-        id=film_json['id'],
-        title=film_json['title'],
-        object_type=film_json['object_type'],
-        original_release_year=film_json.get('original_release_year', None),
-    )
-
-
 async def base_search_for_item(query: str) -> tp.AsyncIterable[BaseMovie]:
     results = await asyncio.get_event_loop() \
         .run_in_executor(None, lambda: jw.search_for_item(query=query))
@@ -160,9 +139,10 @@ async def base_search_for_item(query: str) -> tp.AsyncIterable[BaseMovie]:
 
     results = results['items']
     for result_json in results:
-        result = parse_base_movie(result_json)
-        if result is not None:
-            yield result
+        try:
+            yield BaseMovie(result_json)
+        except IndexError:
+            pass
 
 
 async def search_for_item(query: str) -> tp.AsyncIterable[Movie]:
@@ -170,13 +150,14 @@ async def search_for_item(query: str) -> tp.AsyncIterable[Movie]:
         film_json = await asyncio.get_event_loop() \
             .run_in_executor(None, lambda: jw.get_title(base_result.id, content_type=base_result.object_type))
 
-        film = parse_movie(film_json)
-        if film is not None:
-            yield film
+        try:
+            yield Movie(film_json)
+        except IndexError:
+            pass
 
 
 class WrappedInlineKeyboardMarkup(types.InlineKeyboardMarkup):
-    def __init__(self, symbols_limit: int = 20, count_limit: int = 3) -> None:
+    def __init__(self, symbols_limit: int = 25, count_limit: int = 3) -> None:
         self.symbols_limit = symbols_limit
         super().__init__(row_width=count_limit)
 
@@ -204,8 +185,9 @@ async def movie_by_id(callback_data: types.CallbackQuery) -> None:
     film_json = await asyncio.get_event_loop() \
         .run_in_executor(None, lambda: jw.get_title(movie_id, movie_type))
 
-    film = parse_movie(film_json)
-    if film is None:
+    try:
+        film = Movie(film_json)
+    except IndexError:
         return
 
     keyboard = WrappedInlineKeyboardMarkup()
