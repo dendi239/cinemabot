@@ -123,12 +123,18 @@ async def search_for_item_list(callback_data: types.CallbackQuery) -> None:
 
 
 def main():
-    if 'WEBHOOK_URL' in os.environ:
-        webhook_path = os.environ['WEBHOOK_URL']
-        logging.warning(f"Trying to register webhooks to {webhook_path}")
+    if 'WEBHOOK_HOST' in os.environ and 'WEBHOOK_PORT' in os.environ:
+        webhook_host = os.environ['WEBHOOK_URL']
+        webhook_port = os.environ['WEBHOOK_PORT']
+
+        logging.warning(f"Trying to register webhooks to {webhook_host}/webhook:{webhook_port}")
         start_webhook(
             dispatcher=dp,
-            webhook_path=webhook_path,
+            webhook_path='/webhook',
+            on_startup=lambda: await bot.set_webhook(f'{webhook_host}/webhook:{webhook_port}'),
+            on_shutdown=lambda: await bot.delete_webhook(),
+            host=webhook_host,
+            port=webhook_port,
         )
     else:
         logging.warning("Start polling for updates")
