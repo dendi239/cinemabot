@@ -125,7 +125,7 @@ async def search_for_item_list(callback_data: types.CallbackQuery) -> None:
 def main():
     if 'WEBHOOK_HOST' in os.environ and 'WEBHOOK_PORT' in os.environ:
         webhook_host = os.environ['WEBHOOK_URL']
-        webhook_port = os.environ['WEBHOOK_PORT']
+        webhook_port = int(os.environ['WEBHOOK_PORT'])
 
         async def on_startup(dp: Dispatcher) -> None:
             await bot.set_webhook(f'{webhook_host}/webhook:{webhook_port}')
