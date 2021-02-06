@@ -139,7 +139,7 @@ def main():
             webhook_path='/webhook',
             on_startup=on_startup,
             on_shutdown=on_shutdown,
-            host=webhook_host,
+            host='localhost',
             port=webhook_port,
         )
     else:
