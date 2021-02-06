@@ -127,12 +127,18 @@ def main():
         webhook_host = os.environ['WEBHOOK_URL']
         webhook_port = os.environ['WEBHOOK_PORT']
 
+        async def on_startup(dp: Dispatcher) -> None:
+            await bot.set_webhook(f'{webhook_host}/webhook:{webhook_port}')
+
+        async def on_shutdown(dp: Dispatcher) -> None:
+            await bot.delete_webhook()
+
         logging.warning(f"Trying to register webhooks to {webhook_host}/webhook:{webhook_port}")
         start_webhook(
             dispatcher=dp,
             webhook_path='/webhook',
-            on_startup=lambda: await bot.set_webhook(f'{webhook_host}/webhook:{webhook_port}'),
-            on_shutdown=lambda: await bot.delete_webhook(),
+            on_startup=on_startup,
+            on_shutdown=on_shutdown,
             host=webhook_host,
             port=webhook_port,
         )
