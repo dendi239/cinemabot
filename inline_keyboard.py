@@ -1,3 +1,5 @@
+import typing as tp
+
 import aiogram.types as types
 
 

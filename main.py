@@ -60,7 +60,7 @@ async def search_for_film(message: types.Message) -> None:
     await send_result(message.text, message)
 
 
-def setup_watch_keyboard(keyboard: types.InlineKeyboardMarkup, film: Movie,
+def setup_watch_keyboard(keyboard: types.InlineKeyboardMarkup, film: api.Movie,
                          more_button_query: tp.Optional[str]) -> None:
     if more_button_query is not None:
         keyboard.add(
@@ -77,7 +77,7 @@ async def send_result(query: str, message: types.Message, full_results: bool = T
     if film := await api.api.search_for_item(query):
         keyboard = WrappedInlineKeyboardMarkup()
         setup_watch_keyboard(keyboard, film, query if full_results else None)
-        await bot.send_photo(message.chat.id, film.get_poster_url(), format_description(film),
+        await bot.send_photo(message.chat.id, film.get_poster_url(), api.format_description(film),
                              parse_mode=types.ParseMode.HTML, reply_markup=keyboard)
     else:
         await message.reply(f'Ничего не найдено по запросу "{message.text}"')
@@ -94,7 +94,7 @@ async def movie_by_id(callback_data: types.CallbackQuery) -> None:
     keyboard = WrappedInlineKeyboardMarkup()
     setup_watch_keyboard(keyboard, film, None)
 
-    await bot.send_photo(callback_data.from_user.id, film.get_poster_url(), format_description(film),
+    await bot.send_photo(callback_data.from_user.id, film.get_poster_url(), api.format_description(film),
                          parse_mode=types.ParseMode.HTML, reply_markup=keyboard)
 
 
