@@ -132,6 +132,7 @@ def main():
 
         async def on_startup(dp: Dispatcher) -> None:
             await bot.set_webhook(webhook_url)
+            await bot.get_webhook_info()
 
         async def on_shutdown(dp: Dispatcher) -> None:
             await bot.delete_webhook()
