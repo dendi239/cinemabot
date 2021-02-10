@@ -127,7 +127,7 @@ def main():
         webhook_host = os.environ['WEBHOOK_HOST']
         webhook_port = int(os.environ['PORT'])
 
-        webhook_url_path = '/'
+        webhook_url_path = f'/'
         webhook_url = urllib.parse.urljoin(webhook_host, webhook_url_path)
 
         async def on_startup(dp: Dispatcher) -> None:
@@ -145,6 +145,7 @@ def main():
             on_shutdown=on_shutdown,
             host='127.0.0.1',
             port=webhook_port,
+            route_name='/',
         )
 
     else:
