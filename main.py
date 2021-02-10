@@ -128,7 +128,7 @@ def main():
         webhook_port = int(os.environ['WEBHOOK_PORT'])
 
         async def on_startup(dp: Dispatcher) -> None:
-            await bot.set_webhook(f'{webhook_host}/webhook')
+            await bot.set_webhook(f'{webhook_host}')
 
         async def on_shutdown(dp: Dispatcher) -> None:
             await bot.delete_webhook()
