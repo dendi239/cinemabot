@@ -15,7 +15,7 @@ from inline_keyboard import WrappedInlineKeyboardMarkup
 
 API_TOKEN = os.environ['API_TOKEN']
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
@@ -124,7 +124,7 @@ async def search_for_item_list(callback_data: types.CallbackQuery) -> None:
 
 def main():
     if 'WEBHOOK_HOST' in os.environ and 'WEBHOOK_PORT' in os.environ:
-        webhook_host = os.environ['WEBHOOK_URL']
+        webhook_host = os.environ['WEBHOOK_HOST']
         webhook_port = int(os.environ['WEBHOOK_PORT'])
 
         async def on_startup(dp: Dispatcher) -> None:
@@ -133,10 +133,10 @@ def main():
         async def on_shutdown(dp: Dispatcher) -> None:
             await bot.delete_webhook()
 
-        logging.warning(f"Trying to register webhooks to {webhook_host}/webhook:{webhook_port}")
+        logging.warning(f"Trying to register webhooks to {webhook_host}:{webhook_port}")
         start_webhook(
             dispatcher=dp,
-            webhook_path='/webhook',
+            webhook_path='',
             on_startup=on_startup,
             on_shutdown=on_shutdown,
             host='localhost',
