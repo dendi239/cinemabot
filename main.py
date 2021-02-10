@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import typing as tp
+import urllib.parse
 
 import aiogram.utils.markdown as md
 from aiogram import Bot, types
@@ -126,21 +127,21 @@ def main():
     if 'WEBHOOK_HOST' in os.environ and 'WEBHOOK_PORT' in os.environ:
         webhook_host = os.environ['WEBHOOK_HOST']
         webhook_port = int(os.environ['WEBHOOK_PORT'])
+        webhook_url_path = f'/webhook/{API_TOKEN}'
+        webhook_url = urllib.parse.urljoin(webhook_host, webhook_url_path)
 
         async def on_startup(dp: Dispatcher) -> None:
-            await bot.set_webhook(f'{webhook_host}/{API_TOKEN}:{webhook_port}')
+            await bot.set_webhook(webhook_url)
 
         async def on_shutdown(dp: Dispatcher) -> None:
             await bot.delete_webhook()
 
-        logging.warning(f"Trying to register webhooks to {webhook_host}:{webhook_port}")
         start_webhook(
             dispatcher=dp,
-            webhook_path=f'/{API_TOKEN}',
+            webhook_path=webhook_url_path,
+            skip_updates=True,
             on_startup=on_startup,
             on_shutdown=on_shutdown,
-            host='localhost',
-            port=webhook_port,
         )
     else:
         logging.warning("Start polling for updates")
