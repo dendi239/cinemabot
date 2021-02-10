@@ -9,7 +9,7 @@
 - `/todo` список фич которые хотелось бы ещё поддержать
 - `/schedule N` выполняет поиск по истечении `N` секунд
 
-Cinemabot'а можно найти в телеграмме по сложному нику [@yet_another_awesome_cinema_bot](https://t.me/yet_another_awesome_cinema_bot), а хостится он на Heroku.
+Cinemabot'а можно найти в телеграмме по сложному нику [@yet_another_awesome_cinema_bot](https://t.me/yet_another_awesome_cinema_bot), а хостится он на Heroku с использованием webhook'ов, поэтому пока им практически не пользуются, он постоянно доступен.
 
 ## Детали
 

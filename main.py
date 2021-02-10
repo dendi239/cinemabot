@@ -41,7 +41,6 @@ async def show_help(message: types.Message) -> None:
 async def show_todo(message: types.Message) -> None:
     todo_message = md.text(
         md.bold('TODO list:'),
-        md.text('- webhooks'),
         md.text('- Data validation for `BaseMovie.object_type`'),
         md.text('- Add rating'),
         sep='\n'
@@ -124,15 +123,15 @@ async def search_for_item_list(callback_data: types.CallbackQuery) -> None:
 
 
 def main():
-    if 'WEBHOOK_HOST' in os.environ and 'WEBHOOK_PORT' in os.environ:
+    if 'WEBHOOK_HOST' in os.environ:
         webhook_host = os.environ['WEBHOOK_HOST']
-        webhook_port = int(os.environ['PORT'])
+        port = int(os.environ['PORT'])
+
         webhook_url_path = f'/webhook/{API_TOKEN}'
         webhook_url = urllib.parse.urljoin(webhook_host, webhook_url_path)
 
         async def on_startup(dp: Dispatcher) -> None:
             await bot.set_webhook(webhook_url)
-            await bot.get_webhook_info()
 
         async def on_shutdown(dp: Dispatcher) -> None:
             await bot.delete_webhook()
@@ -143,8 +142,8 @@ def main():
             skip_updates=False,
             on_startup=on_startup,
             on_shutdown=on_shutdown,
-            host='127.0.0.1',
-            port=webhook_port,
+            host='0.0.0.0',
+            port=port,
         )
 
     else:
