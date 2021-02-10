@@ -136,7 +136,7 @@ def main():
         logging.warning(f"Trying to register webhooks to {webhook_host}:{webhook_port}")
         start_webhook(
             dispatcher=dp,
-            webhook_path='',
+            webhook_path=f'/{API_TOKEN}',
             on_startup=on_startup,
             on_shutdown=on_shutdown,
             host='localhost',
