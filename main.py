@@ -142,7 +142,7 @@ def main():
             skip_updates=False,
             on_startup=on_startup,
             on_shutdown=on_shutdown,
-            host='0.0.0.0',
+            host='127.0.0.1',
             port=port,
         )
 
