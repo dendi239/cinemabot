@@ -145,7 +145,7 @@ def main():
             on_shutdown=on_shutdown,
             host='127.0.0.1',
             port=webhook_port,
-            route_name='/',
+            route_name='',
         )
 
     else:
