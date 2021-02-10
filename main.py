@@ -127,7 +127,7 @@ def main():
         webhook_host = os.environ['WEBHOOK_HOST']
         webhook_port = int(os.environ['PORT'])
 
-        webhook_url_path = f'/{API_TOKEN}'
+        webhook_url_path = '/'
         webhook_url = urllib.parse.urljoin(webhook_host, webhook_url_path)
 
         async def on_startup(dp: Dispatcher) -> None:
