@@ -125,7 +125,7 @@ async def search_for_item_list(callback_data: types.CallbackQuery) -> None:
 def main():
     if 'WEBHOOK_HOST' in os.environ:
         webhook_host = os.environ['WEBHOOK_HOST']
-        port = int(os.environ['PORT'])
+        webhook_port = int(os.environ['PORT'])
 
         webhook_url_path = f'/webhook/{API_TOKEN}'
         webhook_url = urllib.parse.urljoin(webhook_host, webhook_url_path)
@@ -144,7 +144,7 @@ def main():
             on_startup=on_startup,
             on_shutdown=on_shutdown,
             host='127.0.0.1',
-            port=port,
+            port=webhook_port,
         )
 
     else:
