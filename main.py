@@ -132,6 +132,7 @@ def main():
 
         async def on_startup(dp: Dispatcher) -> None:
             await bot.set_webhook(webhook_url)
+            await bot.get_webhook_info()
 
         async def on_shutdown(dp: Dispatcher) -> None:
             await bot.delete_webhook()
@@ -139,10 +140,11 @@ def main():
         start_webhook(
             dispatcher=dp,
             webhook_path=webhook_url_path,
-            skip_updates=True,
+            skip_updates=False,
             on_startup=on_startup,
             on_shutdown=on_shutdown,
         )
+
     else:
         logging.warning("Start polling for updates")
         asyncio.get_event_loop().run_until_complete(dp.start_polling())
