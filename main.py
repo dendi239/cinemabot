@@ -143,7 +143,7 @@ def main():
             skip_updates=False,
             on_startup=on_startup,
             on_shutdown=on_shutdown,
-            host='127.0.0.1',
+            host='0.0.0.0',
             port=webhook_port,
         )
 
