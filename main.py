@@ -141,9 +141,9 @@ def main():
         webhook_url = urllib.parse.urljoin(webhook_host, webhook_url_path)
 
         async def on_startup(dp: Dispatcher) -> None:
-            await bot.delete_webhook()
-            await bot.set_webhook(webhook_url)
-            await bot.get_webhook_info()
+            if (await bot.get_webhook_info()).url != webhook_url:
+                await bot.delete_webhook()
+                await bot.set_webhook(webhook_url)
 
         start_webhook(
             dispatcher=dp,
