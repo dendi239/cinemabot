@@ -61,7 +61,7 @@ async def schedule(message: types.Message) -> None:
         await asyncio.sleep(int(duration))
         await send_result(query, message)
     except ValueError:
-        message.reply('please, follow following format: "/schedule 228 1488movie"')
+        await message.reply('Please, use following format: "/schedule N query"')
 
 
 @dp.message_handler()
