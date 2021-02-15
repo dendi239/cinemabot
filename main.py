@@ -135,18 +135,15 @@ def main():
         webhook_url = urllib.parse.urljoin(webhook_host, webhook_url_path)
 
         async def on_startup(dp: Dispatcher) -> None:
+            await bot.delete_webhook()
             await bot.set_webhook(webhook_url)
             await bot.get_webhook_info()
-
-        async def on_shutdown(dp: Dispatcher) -> None:
-            await bot.delete_webhook()
 
         start_webhook(
             dispatcher=dp,
             webhook_path=webhook_url_path,
             skip_updates=False,
             on_startup=on_startup,
-            on_shutdown=on_shutdown,
             host='0.0.0.0',
             port=webhook_port,
         )
