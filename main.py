@@ -45,6 +45,7 @@ async def show_todo(message: types.Message) -> None:
         md.text('- Add rating to description'),
         md.text('- Filters: movie/show, year, lang, etc'),
         md.text('- Notify admin in case of 500 response code'),
+        md.text('- Localization'),
         md.text('- Add more sources:'),
         md.text('  - support something with huge library'),
         md.text('  - support multiple sources via composite source'),
