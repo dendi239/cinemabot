@@ -50,9 +50,12 @@ async def show_todo(message: types.Message) -> None:
 
 @dp.message_handler(commands=['schedule'])
 async def schedule(message: types.Message) -> None:
-    command, duration, query = message.text.split(maxsplit=2)
-    await asyncio.sleep(int(duration))
-    await send_result(query, message)
+    try:
+        command, duration, query = message.text.split(maxsplit=2)
+        await asyncio.sleep(int(duration))
+        await send_result(query, message)
+    except ValueError:
+        message.reply('please, follow following format: "/schedule 228 1488movie"')
 
 
 @dp.message_handler()
