@@ -58,6 +58,11 @@ async def show_todo(message: types.Message) -> None:
 async def schedule(message: types.Message) -> None:
     try:
         command, duration, query = message.text.split(maxsplit=2)
+        duration = int(duration)
+        if duration == 0:
+            await bot.send_message(
+                message.chat.id, "Кстати, если хочешь просто искать фильмы, то можешь просто написать запрос\n"
+                "Да, вот так просто, и никаких команд не нужно")
         await asyncio.sleep(int(duration))
         await send_result(query, message)
     except ValueError:
