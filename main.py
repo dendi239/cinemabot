@@ -66,7 +66,7 @@ async def schedule(message: types.Message) -> None:
 
 @dp.message_handler()
 async def search_for_film(message: types.Message) -> None:
-    logging.warning(f'Received message {message.text}')
+    logging.warning(f'Received message {message.text} from {message.from_user.id}, message: {message}')
     await send_result(message.text, message)
 
 
