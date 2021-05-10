@@ -7,11 +7,35 @@ import justwatch
 
 
 @dataclasses.dataclass
+class Rating:
+    name: str
+    score: float
+
+    @classmethod
+    def from_json(cls, json: tp.Dict[str, tp.Any]) -> tp.Optional['Rating']:
+        if 'provider_type' not in json or 'value' not in json:
+            return None
+
+        provider = json['provider_type']
+        if not provider.endswith('score'):
+            return None
+
+        return Rating(
+            name=provider[:-len(':score')],
+            score=json['value'],
+        )
+
+    def __str__(self) -> str:
+        return f"{self.name.title()}: {self.score}"
+
+
+@dataclasses.dataclass
 class BaseMovie:
     id: int
     title: str
     object_type: str
     original_release_year: tp.Optional[int]
+    ratings: tp.List[Rating]
 
     def __init__(self, film_json: tp.Dict[str, tp.Any]) -> None:
         """
@@ -24,6 +48,13 @@ class BaseMovie:
         self.title = film_json['title']
         self.object_type = film_json['object_type']
         self.original_release_year = film_json.get('original_release_year', None)
+
+        self.ratings = []
+        if 'scoring' in film_json and isinstance(film_json['scoring'], list):
+            for rating_json in film_json['scoring']:
+                rating = Rating.from_json(rating_json)
+                if rating is not None:
+                    self.ratings.append(rating)
 
 
 @dataclasses.dataclass
@@ -74,9 +105,16 @@ def format_description(movie: Movie) -> str:
     if movie.original_release_year is not None:
         name_line += f' ({movie.original_release_year})'
 
-    return f"<b>{name_line}</b>\n" \
-           f"\n" \
-           f"{movie.short_description}\n"
+    return "\n".join((
+        f"<b>{name_line}</b>",
+        ", ".join(
+            f"{rating}"
+            for rating in movie.ratings
+        ),
+        "",
+        f"{movie.short_description}",
+        f"",
+    ))
 
 
 class SearchMovieAPI(abc.ABC):

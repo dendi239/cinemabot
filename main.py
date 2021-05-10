@@ -1,9 +1,13 @@
+#! /usr/bin/env python3
+
 import asyncio
+import contextlib
 import logging
 import os
 import typing as tp
 import urllib.parse
 
+import aiogram.dispatcher.webhook
 import aiogram.utils.markdown as md
 from aiogram import Bot, types
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
@@ -42,7 +46,7 @@ async def show_todo(message: types.Message) -> None:
     todo_message = md.text(
         md.bold('TODO list:'),
         md.text('- Data validation for `BaseMovie.object_type`'),
-        md.text('- Add rating to description'),
+        md.text('- Add custom rating providers'),
         md.text('- Filters: movie/show, year, lang, etc'),
         md.text('- Notify admin in case of 500 response code'),
         md.text('- Localization'),
@@ -61,7 +65,8 @@ async def schedule(message: types.Message) -> None:
         duration = int(duration)
         if duration == 0:
             await bot.send_message(
-                message.chat.id, "Кстати, если хочешь просто искать фильмы, то можешь просто написать запрос\n"
+                message.chat.id,
+                "Кстати, если хочешь просто искать фильмы, то можешь просто написать запрос\n"
                 "Да, вот так просто, и никаких команд не нужно")
         await asyncio.sleep(int(duration))
         await send_result(query, message)
@@ -137,7 +142,21 @@ async def search_for_item_list(callback_data: types.CallbackQuery) -> None:
                            parse_mode=types.ParseMode.HTML, reply_markup=keyboard)
 
 
-def main():
+@contextlib.asynccontextmanager
+async def debug_disable_webhook() -> tp.AsyncGenerator[aiogram.types.WebhookInfo, None]:
+    webhook = await bot.get_webhook_info()
+    await bot.delete_webhook()
+    logging.info(f"Deleted webhook {webhook}")
+    try:
+        logging.info("Start polling for updates")
+        yield webhook
+    finally:
+        logging.info(f"return webhook {webhook}")
+        if webhook is not None and webhook.url:
+            await bot.set_webhook(webhook.url)
+
+
+async def main():
     if 'WEBHOOK_HOST' in os.environ:
         webhook_host = os.environ['WEBHOOK_HOST']
         webhook_port = int(os.environ['PORT'])
@@ -160,9 +179,9 @@ def main():
         )
 
     else:
-        logging.warning("Start polling for updates")
-        asyncio.get_event_loop().run_until_complete(dp.start_polling())
+        async with debug_disable_webhook():
+            await dp.start_polling()
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.get_event_loop().run_until_complete(main())
