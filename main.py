@@ -156,7 +156,7 @@ async def debug_disable_webhook() -> tp.AsyncGenerator[aiogram.types.WebhookInfo
             await bot.set_webhook(webhook.url)
 
 
-async def main():
+def main():
     if 'WEBHOOK_HOST' in os.environ:
         webhook_host = os.environ['WEBHOOK_HOST']
         webhook_port = int(os.environ['PORT'])
@@ -179,9 +179,12 @@ async def main():
         )
 
     else:
-        async with debug_disable_webhook():
-            await dp.start_polling()
+        async def run() -> None:
+            async with debug_disable_webhook():
+                await dp.start_polling()
+
+        asyncio.get_event_loop().run_until_complete(run())
 
 
 if __name__ == '__main__':
-    asyncio.get_event_loop().run_until_complete(main())
+    main()
