@@ -145,7 +145,11 @@ class JustWatchSearchMovieAPI(SearchMovieAPI):
         self.jw = justwatch.JustWatch(country=country)
         self.providers = {provider['id']: provider for provider in self.jw.get_providers()}
 
-    def provider_name(self, provider_id: int) -> str:
+    def provider_name(self, provider_id: int) -> tp.Optional[str]:
+        if provider_id not in self.providers:
+            return None
+        if 'clear_name' not in self.providers[provider_id]:
+            return None
         return self.providers[provider_id]['clear_name']
 
     async def base_search(self, query: str) -> tp.AsyncIterable[BaseMovie]:

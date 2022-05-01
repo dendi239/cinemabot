@@ -2,6 +2,7 @@
 
 import asyncio
 import contextlib
+import datetime
 import logging
 import os
 import typing as tp
@@ -82,15 +83,17 @@ async def search_for_film(message: types.Message) -> None:
 
 def setup_watch_keyboard(keyboard: types.InlineKeyboardMarkup, film: api.Movie,
                          more_button_query: tp.Optional[str]) -> None:
+    buttons = []
+    for offer in film.offers:
+        provider_name = api.api.provider_name(offer.provider_id)
+        if provider_name is None:
+            continue
+        buttons.append(types.InlineKeyboardButton(provider_name, url=offer.url))
+
     if more_button_query is not None:
-        keyboard.add(
-            *(types.InlineKeyboardButton(api.api.provider_name(offer.provider_id), url=offer.url)
-              for offer in film.offers),
-            types.InlineKeyboardButton('more', callback_data=f'list:{more_button_query}'),
-        )
+        keyboard.add(*buttons, types.InlineKeyboardButton('more', callback_data=f'list:{more_button_query}'))
     else:
-        keyboard.add(*(types.InlineKeyboardButton(api.api.provider_name(offer.provider_id), url=offer.url)
-                       for offer in film.offers))
+        keyboard.add(*buttons)
 
 
 async def send_result(query: str, message: types.Message, full_results: bool = True) -> None:
@@ -156,7 +159,7 @@ async def debug_disable_webhook() -> tp.AsyncGenerator[aiogram.types.WebhookInfo
             await bot.set_webhook(webhook.url)
 
 
-def main():
+def main() -> None:
     if 'WEBHOOK_HOST' in os.environ:
         webhook_host = os.environ['WEBHOOK_HOST']
         webhook_port = int(os.environ['PORT'])
@@ -180,6 +183,8 @@ def main():
 
     else:
         async def run() -> None:
+            logging.info(await bot.get_me())
+
             async with debug_disable_webhook():
                 await dp.start_polling()
 
