@@ -12,17 +12,17 @@ class Rating:
     score: float
 
     @classmethod
-    def from_json(cls, json: tp.Dict[str, tp.Any]) -> tp.Optional['Rating']:
-        if 'provider_type' not in json or 'value' not in json:
+    def from_json(cls, json: tp.Dict[str, tp.Any]) -> tp.Optional["Rating"]:
+        if "provider_type" not in json or "value" not in json:
             return None
 
-        provider = json['provider_type']
-        if not provider.endswith('score'):
+        provider = json["provider_type"]
+        if not provider.endswith("score"):
             return None
 
         return Rating(
-            name=provider[:-len(':score')],
-            score=json['value'],
+            name=provider[: -len(":score")],
+            score=json["value"],
         )
 
     def __str__(self) -> str:
@@ -44,14 +44,14 @@ class BaseMovie:
         :param film_json: json with 'id', 'title', 'object_type' fields present
         :raise if film_json doesn't have listed fields:
         """
-        self.id = film_json['id']
-        self.title = film_json['title']
-        self.object_type = film_json['object_type']
-        self.original_release_year = film_json.get('original_release_year', None)
+        self.id = film_json["id"]
+        self.title = film_json["title"]
+        self.object_type = film_json["object_type"]
+        self.original_release_year = film_json.get("original_release_year", None)
 
         self.ratings = []
-        if 'scoring' in film_json and isinstance(film_json['scoring'], list):
-            for rating_json in film_json['scoring']:
+        if "scoring" in film_json and isinstance(film_json["scoring"], list):
+            for rating_json in film_json["scoring"]:
                 rating = Rating.from_json(rating_json)
                 if rating is not None:
                     self.ratings.append(rating)
@@ -63,8 +63,8 @@ class CinemaLink:
     url: str
 
     def __init__(self, cinema_link_json: tp.Dict[str, tp.Any]) -> None:
-        self.provider_id = cinema_link_json['provider_id']
-        self.url = cinema_link_json['urls']['standard_web']
+        self.provider_id = cinema_link_json["provider_id"]
+        self.url = cinema_link_json["urls"]["standard_web"]
 
 
 @dataclasses.dataclass
@@ -75,12 +75,12 @@ class Movie(BaseMovie):
 
     def __init__(self, film_json: tp.Dict[str, tp.Any]) -> None:
         super().__init__(film_json)
-        self.short_description = film_json['short_description']
-        self.poster = film_json['poster']
+        self.short_description = film_json["short_description"]
+        self.poster = film_json["poster"]
 
         offers: tp.Dict[int, CinemaLink] = {}
-        if 'offers' in film_json:
-            for offer_json in film_json['offers']:
+        if "offers" in film_json:
+            for offer_json in film_json["offers"]:
                 try:
                     cinema_link = CinemaLink(offer_json)
                     offers[cinema_link.provider_id] = cinema_link
@@ -90,31 +90,30 @@ class Movie(BaseMovie):
         self.offers = list(offers.values())
 
     def get_poster_url(self) -> str:
-        return 'https://images.justwatch.com' + self.poster.format(profile='s592')
+        return "https://images.justwatch.com" + self.poster.format(profile="s592")
 
 
 def format_base_movie(base_movie: BaseMovie) -> str:
     if base_movie.original_release_year is not None:
-        return f'<b>{base_movie.title}</b> ({base_movie.original_release_year})'
+        return f"<b>{base_movie.title}</b> ({base_movie.original_release_year})"
     else:
-        return f'<b>{base_movie.title}</b>'
+        return f"<b>{base_movie.title}</b>"
 
 
 def format_description(movie: Movie) -> str:
     name_line = movie.title
     if movie.original_release_year is not None:
-        name_line += f' ({movie.original_release_year})'
+        name_line += f" ({movie.original_release_year})"
 
-    return "\n".join((
-        f"<b>{name_line}</b>",
-        ", ".join(
-            f"{rating}"
-            for rating in movie.ratings
-        ),
-        "",
-        f"{movie.short_description}",
-        f"",
-    ))
+    return "\n".join(
+        (
+            f"<b>{name_line}</b>",
+            ", ".join(f"{rating}" for rating in movie.ratings),
+            "",
+            f"{movie.short_description}",
+            f"",
+        )
+    )
 
 
 class SearchMovieAPI(abc.ABC):
@@ -141,25 +140,24 @@ class SearchMovieAPI(abc.ABC):
 
 
 class JustWatchSearchMovieAPI(SearchMovieAPI):
-    def __init__(self, country: str = 'RU') -> None:
+    def __init__(self, country: str = "RU") -> None:
         self.jw = justwatch.JustWatch(country=country)
-        self.providers = {provider['id']: provider for provider in self.jw.get_providers()}
+        self.providers = {provider["id"]: provider for provider in self.jw.get_providers()}
 
     def provider_name(self, provider_id: int) -> tp.Optional[str]:
         if provider_id not in self.providers:
             return None
-        if 'clear_name' not in self.providers[provider_id]:
+        if "clear_name" not in self.providers[provider_id]:
             return None
-        return self.providers[provider_id]['clear_name']
+        return self.providers[provider_id]["clear_name"]
 
     async def base_search(self, query: str) -> tp.AsyncIterable[BaseMovie]:
-        results = await asyncio.get_event_loop() \
-            .run_in_executor(None, lambda: self.jw.search_for_item(query=query))
+        results = await asyncio.get_event_loop().run_in_executor(None, lambda: self.jw.search_for_item(query=query))
 
-        if ('items' not in results) or (not results['items']):
+        if ("items" not in results) or (not results["items"]):
             return
 
-        results = results['items']
+        results = results["items"]
         for result_json in results:
             try:
                 yield BaseMovie(result_json)
@@ -167,8 +165,9 @@ class JustWatchSearchMovieAPI(SearchMovieAPI):
                 pass
 
     async def movie_details(self, movie_id: int, object_type: str) -> Movie:
-        film_json = await asyncio.get_event_loop() \
-            .run_in_executor(None, lambda: self.jw.get_title(movie_id, content_type=object_type))
+        film_json = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: self.jw.get_title(movie_id, content_type=object_type)
+        )
 
         return Movie(film_json)
 

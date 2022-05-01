@@ -22,4 +22,3 @@ class WrappedInlineKeyboardMarkup(types.InlineKeyboardMarkup):
                 row_len = len(button.text)
 
         self.inline_keyboard.append(row)
-
