@@ -171,6 +171,8 @@ async def debug_disable_webhook() -> tp.AsyncGenerator[aiogram.types.WebhookInfo
 
 
 def main() -> None:
+    logging.basicConfig(level=logging.DEBUG)
+
     if "WEBHOOK_HOST" in os.environ:
         webhook_host = os.environ["WEBHOOK_HOST"]
         webhook_port = int(os.environ["PORT"])

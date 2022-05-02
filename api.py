@@ -1,6 +1,7 @@
 import abc
 import asyncio
 import dataclasses
+import logging
 import typing as tp
 
 import justwatch
@@ -146,6 +147,10 @@ class JustWatchSearchMovieAPI(SearchMovieAPI):
 
     def provider_name(self, provider_id: int) -> tp.Optional[str]:
         if provider_id not in self.providers:
+            logging.error(f"no provider with id: '{provider_id}' was found.")
+            logging.error(f"  known providers:")
+            for id, provider in self.providers.items():
+                logging.error(f"    id: '{id}', clear_name: '{provider['clear_name']}'")
             return None
         if "clear_name" not in self.providers[provider_id]:
             return None
